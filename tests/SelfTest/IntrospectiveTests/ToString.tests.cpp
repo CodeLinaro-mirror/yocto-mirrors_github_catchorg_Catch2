@@ -99,7 +99,7 @@ TEMPLATE_TEST_CASE( "Stringifying char arrays with statically known sizes",
     CHECK( ::Catch::Detail::stringify( no_null_terminator ) == R"("abc")"s );
 }
 
-TEST_CASE( "#2944 - Stringifying dates before 1970 should not crash" ) {
+TEST_CASE( "#2944 - Stringifying dates before 1970 should not crash", "[.approvals]" ) {
     using Catch::Matchers::Equals;
     using Days = std::chrono::duration<int32_t, std::ratio<86400>>;
     using SysDays = std::chrono::time_point<std::chrono::system_clock, Days>;
