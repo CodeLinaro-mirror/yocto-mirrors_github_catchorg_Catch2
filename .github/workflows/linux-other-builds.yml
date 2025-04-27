@@ -21,7 +21,6 @@ jobs:
             build_description: Surrogates build
             build_type: Debug
             std: 14
-            other_pkgs: clang-14
             cmake_configurations: -DCATCH_BUILD_SURROGATES=ON
 
           # Extras and examples with gcc-11
@@ -29,13 +28,11 @@ jobs:
             build_description: Extras + Examples
             build_type: Debug
             std: 14
-            other_pkgs: g++-11
             cmake_configurations: -DCATCH_BUILD_EXTRA_TESTS=ON -DCATCH_BUILD_EXAMPLES=ON -DCATCH_ENABLE_CMAKE_HELPER_TESTS=ON
           - cxx: g++-11
             build_description: Extras + Examples
             build_type: Release
             std: 14
-            other_pkgs: g++-11
             cmake_configurations: -DCATCH_BUILD_EXTRA_TESTS=ON -DCATCH_BUILD_EXAMPLES=ON -DCATCH_ENABLE_CMAKE_HELPER_TESTS=ON
 
           # Extras and examples with Clang-14
@@ -43,13 +40,11 @@ jobs:
             build_description: Extras + Examples
             build_type: Debug
             std: 17
-            other_pkgs: clang-14
             cmake_configurations: -DCATCH_BUILD_EXTRA_TESTS=ON -DCATCH_BUILD_EXAMPLES=ON -DCATCH_ENABLE_CMAKE_HELPER_TESTS=ON
           - cxx: clang++-14
             build_description: Extras + Examples
             build_type: Release
             std: 17
-            other_pkgs: clang-14
             cmake_configurations: -DCATCH_BUILD_EXTRA_TESTS=ON -DCATCH_BUILD_EXAMPLES=ON -DCATCH_ENABLE_CMAKE_HELPER_TESTS=ON
 
           # Configure tests with Clang-14
@@ -57,7 +52,6 @@ jobs:
             build_description: CMake configuration tests
             build_type: Debug
             std: 14
-            other_pkgs: clang-14
             cmake_configurations: -DCATCH_ENABLE_CONFIGURE_TESTS=ON
 
           # Valgrind test Clang-14
@@ -65,7 +59,7 @@ jobs:
           #   build_description: Valgrind tests
           #   build_type: Debug
           #   std: 14
-          #   other_pkgs: clang-14 valgrind
+          #   other_pkgs: valgrind
           #   cmake_configurations: -DMEMORYCHECK_COMMAND=`which valgrind` -DMEMORYCHECK_COMMAND_OPTIONS="-q --track-origins=yes --leak-check=full --num-callers=50 --show-leak-kinds=definite --error-exitcode=1"
           #   other_ctest_args: -T memcheck -LE uses-python
 
@@ -76,7 +70,7 @@ jobs:
     - name: Prepare environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
+        sudo apt-get install -y ${{matrix.other_pkgs}}
 
     - name: Configure build
       # Note: $GITHUB_WORKSPACE is distinct from ${{runner.workspace}}.
@@ -99,11 +93,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-
-    - name: Prepare environment
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ninja-build clang-15 clang-tidy-15
 
     - name: Configure
       # Note: $GITHUB_WORKSPACE is distinct from ${{runner.workspace}}.

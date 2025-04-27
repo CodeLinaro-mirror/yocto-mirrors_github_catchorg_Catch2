@@ -24,7 +24,7 @@ jobs:
     - name: Prepare environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y meson ninja-build ${{matrix.other_pkgs}}
+        sudo apt-get install -y meson ${{matrix.other_pkgs}}
 
     - name: Configure
       env:

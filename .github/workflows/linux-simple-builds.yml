@@ -95,7 +95,7 @@ jobs:
     - name: Prepare environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
+        sudo apt-get install -y ${{matrix.other_pkgs}}
 
     - name: Configure
       # Note: $GITHUB_WORKSPACE is distinct from ${{runner.workspace}}.
