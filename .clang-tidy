@@ -8,6 +8,8 @@ Checks: >-
   clang-analyzer-*,
   -clang-analyzer-optin.core.EnumCastOutOfRange,
 
+  cppcoreguidelines-avoid-non-const-global-variables,
+
   bugprone-*,
   -bugprone-unchecked-optional-access,
   ,# This is ridiculous, as it triggers on constants,
