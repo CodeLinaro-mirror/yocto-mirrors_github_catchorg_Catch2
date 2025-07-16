@@ -329,7 +329,7 @@ namespace Catch {
         m_activeSections.push_back(&sectionTracker);
 
         SectionInfo sectionInfo( sectionLineInfo, static_cast<std::string>(sectionName) );
-        m_lastAssertionInfo.lineInfo = sectionInfo.lineInfo;
+        m_lastAssertionInfo.lineInfo = sectionLineInfo;
 
         {
             auto _ = scopedDeactivate( *m_outputRedirect );
@@ -482,8 +482,8 @@ namespace Catch {
         // Best effort cleanup for sections that have not been destructed yet
         // Since this is a fatal error, we have not had and won't have the opportunity to destruct them properly
         while (!m_activeSections.empty()) {
-            auto nl = m_activeSections.back()->nameAndLocation();
-            SectionEndInfo endInfo{ SectionInfo(CATCH_MOVE(nl.location), CATCH_MOVE(nl.name)), {}, 0.0 };
+            auto const& nl = m_activeSections.back()->nameAndLocation();
+            SectionEndInfo endInfo{ SectionInfo(nl.location, nl.name), {}, 0.0 };
             sectionEndedEarly(CATCH_MOVE(endInfo));
         }
         handleUnfinishedSections();
@@ -635,11 +635,12 @@ namespace Catch {
             std::string&& message,
             AssertionReaction& reaction
     ) {
-        m_lastAssertionInfo = info;
+        m_lastAssertionInfo.lineInfo = info.lineInfo;
+        m_lastAssertionInfo.resultDisposition = info.resultDisposition;
 
         AssertionResultData data( resultType, LazyExpression( false ) );
         data.message = CATCH_MOVE( message );
-        AssertionResult assertionResult{ m_lastAssertionInfo,
+        AssertionResult assertionResult{ info,
                                          CATCH_MOVE( data ) };
 
         const auto isOk = assertionResult.isOk();
@@ -665,7 +666,8 @@ namespace Catch {
             std::string&& message,
             AssertionReaction& reaction
     ) {
-        m_lastAssertionInfo = info;
+        m_lastAssertionInfo.lineInfo = info.lineInfo;
+        m_lastAssertionInfo.resultDisposition = info.resultDisposition;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = CATCH_MOVE(message);
@@ -684,7 +686,7 @@ namespace Catch {
             AssertionInfo const& info
     ) {
         using namespace std::string_literals;
-        m_lastAssertionInfo = info;
+        m_lastAssertionInfo.lineInfo = info.lineInfo;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = "Exception translation was disabled by CATCH_CONFIG_FAST_COMPILE"s;
@@ -697,7 +699,8 @@ namespace Catch {
             ResultWas::OfType resultType,
             AssertionReaction &reaction
     ) {
-        m_lastAssertionInfo = info;
+        m_lastAssertionInfo.lineInfo = info.lineInfo;
+        m_lastAssertionInfo.resultDisposition = info.resultDisposition;
 
         AssertionResultData data( resultType, LazyExpression( false ) );
         AssertionResult assertionResult{ info, CATCH_MOVE( data ) };
