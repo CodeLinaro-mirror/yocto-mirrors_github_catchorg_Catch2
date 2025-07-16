@@ -151,9 +151,11 @@ namespace Catch {
         TrackerContext m_trackerContext;
         Detail::unique_ptr<OutputRedirect> m_outputRedirect;
         FatalConditionHandler m_fatalConditionhandler;
+        size_t m_abortAfterXFailedAssertions;
         bool m_lastAssertionPassed = false;
         bool m_shouldReportUnexpected = true;
         bool m_includeSuccessfulResults;
+        bool m_shouldDebugBreak;
     };
 
     void seedRng(IConfig const& config);
