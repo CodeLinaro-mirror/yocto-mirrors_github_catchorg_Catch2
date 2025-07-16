@@ -612,7 +612,6 @@ namespace Catch {
             populateReaction(
                 reaction, info.resultDisposition & ResultDisposition::Normal );
         }
-        resetAssertionInfo();
     }
     void RunContext::reportExpr(
             AssertionInfo const &info,
@@ -620,13 +619,14 @@ namespace Catch {
             ITransientExpression const *expr,
             bool negated ) {
 
-        m_lastAssertionInfo = info;
+        m_lastAssertionInfo.lineInfo = info.lineInfo;
         AssertionResultData data( resultType, LazyExpression( negated ) );
 
         AssertionResult assertionResult{ info, CATCH_MOVE( data ) };
         assertionResult.m_resultData.lazyExpression.m_transientExpression = expr;
 
         assertionEnded( CATCH_MOVE(assertionResult) );
+        resetAssertionInfo();
     }
 
     void RunContext::handleMessage(
