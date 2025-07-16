@@ -308,7 +308,6 @@ namespace Catch {
     void RunContext::resetAssertionInfo() {
         m_lastAssertionInfo.macroName = StringRef();
         m_lastAssertionInfo.capturedExpression = "{Unknown expression after the reported line}"_sr;
-        m_lastAssertionInfo.resultDisposition = ResultDisposition::Normal;
     }
 
     void RunContext::notifyAssertionStarted( AssertionInfo const& info ) {
