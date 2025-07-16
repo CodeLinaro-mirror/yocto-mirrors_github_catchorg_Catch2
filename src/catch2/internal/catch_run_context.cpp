@@ -610,7 +610,8 @@ namespace Catch {
         }
         else {
             reportExpr(info, ResultWas::ExpressionFailed, &expr, negated );
-            populateReaction( reaction );
+            populateReaction(
+                reaction, info.resultDisposition & ResultDisposition::Normal );
         }
         resetAssertionInfo();
     }
@@ -636,7 +637,6 @@ namespace Catch {
             AssertionReaction& reaction
     ) {
         m_lastAssertionInfo.lineInfo = info.lineInfo;
-        m_lastAssertionInfo.resultDisposition = info.resultDisposition;
 
         AssertionResultData data( resultType, LazyExpression( false ) );
         data.message = CATCH_MOVE( message );
@@ -646,7 +646,8 @@ namespace Catch {
         const auto isOk = assertionResult.isOk();
         assertionEnded( CATCH_MOVE(assertionResult) );
         if ( !isOk ) {
-            populateReaction( reaction );
+            populateReaction(
+                reaction, info.resultDisposition & ResultDisposition::Normal );
         } else if ( resultType == ResultWas::ExplicitSkip ) {
             // TODO: Need to handle this explicitly, as ExplicitSkip is
             // considered "OK"
@@ -667,19 +668,20 @@ namespace Catch {
             AssertionReaction& reaction
     ) {
         m_lastAssertionInfo.lineInfo = info.lineInfo;
-        m_lastAssertionInfo.resultDisposition = info.resultDisposition;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = CATCH_MOVE(message);
         AssertionResult assertionResult{ info, CATCH_MOVE(data) };
         assertionEnded( CATCH_MOVE(assertionResult) );
-        populateReaction( reaction );
+        populateReaction( reaction,
+                          info.resultDisposition & ResultDisposition::Normal );
         resetAssertionInfo();
     }
 
-    void RunContext::populateReaction( AssertionReaction& reaction ) {
+    void RunContext::populateReaction( AssertionReaction& reaction,
+                                       bool has_normal_disposition ) {
         reaction.shouldDebugBreak = m_config->shouldDebugBreak();
-        reaction.shouldThrow = aborting() || (m_lastAssertionInfo.resultDisposition & ResultDisposition::Normal);
+        reaction.shouldThrow = aborting() || has_normal_disposition;
     }
 
     void RunContext::handleIncomplete(
@@ -700,14 +702,16 @@ namespace Catch {
             AssertionReaction &reaction
     ) {
         m_lastAssertionInfo.lineInfo = info.lineInfo;
-        m_lastAssertionInfo.resultDisposition = info.resultDisposition;
 
         AssertionResultData data( resultType, LazyExpression( false ) );
         AssertionResult assertionResult{ info, CATCH_MOVE( data ) };
 
         const auto isOk = assertionResult.isOk();
         assertionEnded( CATCH_MOVE(assertionResult) );
-        if ( !isOk ) { populateReaction( reaction ); }
+        if ( !isOk ) {
+            populateReaction(
+                reaction, info.resultDisposition & ResultDisposition::Normal );
+        }
         resetAssertionInfo();
     }
 

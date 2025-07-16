@@ -129,7 +129,7 @@ namespace Catch {
                     ITransientExpression const *expr,
                     bool negated );
 
-        void populateReaction( AssertionReaction& reaction );
+        void populateReaction( AssertionReaction& reaction, bool has_normal_disposition );
 
     private:
 
