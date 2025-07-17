@@ -14,8 +14,10 @@
 [Other toggles](#other-toggles)<br>
 [Enabling stringification](#enabling-stringification)<br>
 [Disabling exceptions](#disabling-exceptions)<br>
+[Disabling deprecation warnings](#disabling-deprecation-warnings)<br>
 [Overriding Catch's debug break (`-b`)](#overriding-catchs-debug-break--b)<br>
 [Static analysis support](#static-analysis-support)<br>
+[Experimental thread safety](#experimental-thread-safety)<br>
 
 Catch2 is designed to "just work" as much as possible, and most of the
 configuration options below are changed automatically during compilation,
@@ -313,6 +315,21 @@ no backwards compatibility guarantees._
 **DO NOT ENABLE THIS FOR BUILDS YOU INTEND TO RUN.** The changed internals
 are not meant to be runnable, only "scannable".
 
+
+## Experimental thread safety
+
+> Introduced in Catch2 X.Y.Z
+
+Catch2 can optionally support thread-safe assertions, that means, multiple
+user-spawned threads can use the assertion macros at the same time. Due
+to the performance cost this imposes even on single-threaded usage, Catch2
+defaults to non-thread-safe assertions.
+
+    CATCH_CONFIG_EXPERIMENTAL_THREAD_SAFE_ASSERTIONS     // enables thread safe assertions
+    CATCH_CONFIG_NO_EXPERIMENTAL_THREAD_SAFE_ASSERTIONS  // force-disables thread safe assertions
+
+See [the documentation on thread safety in Catch2](thread-safety.md#top)
+for details on which macros are safe and other notes.
 
 
 ---
