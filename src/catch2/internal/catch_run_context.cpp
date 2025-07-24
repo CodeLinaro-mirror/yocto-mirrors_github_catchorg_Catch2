@@ -384,8 +384,7 @@ namespace Catch {
     IGeneratorTracker*
     RunContext::acquireGeneratorTracker( StringRef generatorName,
                                          SourceLineInfo const& lineInfo ) {
-        using namespace Generators;
-        GeneratorTracker* tracker = GeneratorTracker::acquire(
+        auto* tracker = Generators::GeneratorTracker::acquire(
             m_trackerContext,
             TestCaseTracking::NameAndLocationRef(
                  generatorName, lineInfo ) );
