@@ -1,14 +1,11 @@
 <a id="top"></a>
 
-<div align="center">
-
 <table width="100%">
   <tr>
     <td align="center" width="50%"><img src="/data/artwork/catch2-logo-full-with-background.svg" width="100%"></td>
     <td align="center" width="50%"><figure><figcaption>Special thanks to:</figcaption><img src="/data/sponsors/github_repo_sponsorship.png" width="100%"></figure></td>
   </tr>
 </table>
-
 
 [![Github Releases](https://img.shields.io/github/release/catchorg/catch2.svg)](https://github.com/catchorg/catch2/releases)
 [![Linux build status](https://github.com/catchorg/Catch2/actions/workflows/linux-simple-builds.yml/badge.svg)](https://github.com/catchorg/Catch2/actions/workflows/linux-simple-builds.yml)
