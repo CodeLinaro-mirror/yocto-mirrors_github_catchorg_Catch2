@@ -7,11 +7,12 @@
     <sup>Special thanks to:</sup>
     <br/>
     <br/>
-    <img src="data/sponsors/github_repo_sponsorship.png" width="400" alt="Tuple">
+    <img src="data/sponsors/github_repo_sponsorship-inverted.png" width="400" alt="Tuple">
   </div>
 </a>
 <hr>
 </div>
+
 
 ![Catch2 logo](data/artwork/catch2-logo-full-with-background.svg)
 
