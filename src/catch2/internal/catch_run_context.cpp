@@ -21,6 +21,7 @@
 #include <catch2/internal/catch_assertion_handler.hpp>
 #include <catch2/internal/catch_test_failure_exception.hpp>
 #include <catch2/internal/catch_result_type.hpp>
+#include <catch2/interfaces/catch_interfaces_capture.hpp>
 
 #include <cassert>
 #include <algorithm>
@@ -809,13 +810,6 @@ namespace Catch {
         }
     }
 
-    IResultCapture& getResultCapture() {
-        if (auto* capture = getCurrentContext().getResultCapture())
-            return *capture;
-        else
-            CATCH_INTERNAL_ERROR("No result capture instance");
-    }
-
     void IResultCapture::pushScopedMessage( MessageInfo&& message ) {
         Detail::g_messages.push_back( CATCH_MOVE( message ) );
     }
@@ -846,4 +840,10 @@ namespace Catch {
         return getCurrentContext().getConfig()->rngSeed();
     }
 
+
+    namespace Detail {
+        void missingCaptureInstance() {
+            CATCH_INTERNAL_ERROR( "No result capture instance" );
+        }
+    } // namespace Detail
 }
