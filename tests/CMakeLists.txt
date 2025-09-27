@@ -662,5 +662,26 @@ foreach(reporterName # "Automake" - the simple .trs format does not support any 
   )
 endforeach()
 
+add_test(NAME "Bazel::RngSeedEnvVar"
+  COMMAND
+    $<TARGET_FILE:SelfTest> "Factorials are computed"
+)
+set_tests_properties("Bazel::RngSeedEnvVar"
+  PROPERTIES
+    ENVIRONMENT "BAZEL_TEST=1;TEST_RANDOM_SEED=18181818"
+    PASS_REGULAR_EXPRESSION "Randomness seeded to: 18181818"
+)
+
+add_test(NAME "Bazel::RngSeedEnvVarPriorityOverCLI"
+  COMMAND
+    $<TARGET_FILE:SelfTest> "Factorials are computed"
+    --rng-seed 17171717
+)
+set_tests_properties("Bazel::RngSeedEnvVarPriorityOverCLI"
+  PROPERTIES
+    ENVIRONMENT "BAZEL_TEST=1;TEST_RANDOM_SEED=18181818"
+    PASS_REGULAR_EXPRESSION "Randomness seeded to: 18181818"
+)
+
 list(APPEND CATCH_TEST_TARGETS SelfTest)
 set(CATCH_TEST_TARGETS ${CATCH_TEST_TARGETS} PARENT_SCOPE)
