@@ -210,6 +210,13 @@ namespace Catch {
     {
         getCurrentMutableContext().setResultCapture( this );
         m_reporter->testRunStarting(m_runInfo);
+
+        // TODO: HACK!
+        //       We need to make sure the underlying cache is initialized
+        //       while we are guaranteed to be running in a single thread,
+        //       because the initialization is not thread-safe.
+        ReusableStringStream rss;
+        (void)rss;
     }
 
     RunContext::~RunContext() {
