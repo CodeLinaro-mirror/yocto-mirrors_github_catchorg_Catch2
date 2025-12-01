@@ -187,19 +187,13 @@ namespace Catch {
         // This is the source location for last encountered macro. It is
         // used to provide the users with more precise location of error
         // when an unexpected exception/fatal error happens.
-        static SourceLineInfo& g_lastKnownLineInfo() {
-            static CATCH_INTERNAL_THREAD_LOCAL SourceLineInfo value(
-                "DummyLocation", static_cast<size_t>( -1 ) );
-            return value;
-        }
+        static CATCH_INTERNAL_THREAD_LOCAL SourceLineInfo
+            g_lastKnownLineInfo( "DummyLocation", static_cast<size_t>( -1 ) );
 
         // Should we clear message scopes before sending off the messages to
         // reporter? Set in `assertionPassedFastPath` to avoid doing the full
         // clear there for performance reasons.
-        static bool& g_clearMessageScopes() {
-            static CATCH_INTERNAL_THREAD_LOCAL bool value = false;
-            return value;
-        }
+        static CATCH_INTERNAL_THREAD_LOCAL bool g_clearMessageScopes = false;
 
         CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS
@@ -339,7 +333,7 @@ namespace Catch {
 
 
     void RunContext::assertionEnded(AssertionResult&& result) {
-        Detail::g_lastKnownLineInfo() = result.m_info.lineInfo;
+        Detail::g_lastKnownLineInfo = result.m_info.lineInfo;
         if (result.getResultType() == ResultWas::Ok) {
             m_atomicAssertionCount.passed++;
             Detail::g_lastAssertionPassed = true;
@@ -359,9 +353,9 @@ namespace Catch {
             Detail::g_lastAssertionPassed = true;
         }
 
-        if ( Detail::g_clearMessageScopes() ) {
+        if ( Detail::g_clearMessageScopes ) {
             Detail::g_messageScopes().clear();
-            Detail::g_clearMessageScopes() = false;
+            Detail::g_clearMessageScopes = false;
         }
 
         // From here, we are touching shared state and need mutex.
@@ -402,7 +396,7 @@ namespace Catch {
         m_activeSections.push_back(&sectionTracker);
 
         SectionInfo sectionInfo( sectionLineInfo, static_cast<std::string>(sectionName) );
-        Detail::g_lastKnownLineInfo() = sectionLineInfo;
+        Detail::g_lastKnownLineInfo = sectionLineInfo;
 
         {
             auto _ = scopedDeactivate( *m_outputRedirect );
@@ -421,7 +415,7 @@ namespace Catch {
             m_trackerContext,
             TestCaseTracking::NameAndLocationRef(
                  generatorName, lineInfo ) );
-        Detail::g_lastKnownLineInfo() = lineInfo;
+        Detail::g_lastKnownLineInfo = lineInfo;
         return tracker;
     }
 
@@ -605,10 +599,10 @@ namespace Catch {
 
     void RunContext::assertionPassedFastPath(SourceLineInfo lineInfo) {
         // We want to save the line info for better experience with unexpected assertions
-        Detail::g_lastKnownLineInfo() = lineInfo;
+        Detail::g_lastKnownLineInfo = lineInfo;
         ++m_atomicAssertionCount.passed;
         Detail::g_lastAssertionPassed = true;
-        Detail::g_clearMessageScopes() = true;
+        Detail::g_clearMessageScopes = true;
     }
 
     void RunContext::updateTotalsFromAtomics() {
@@ -632,7 +626,7 @@ namespace Catch {
         Counts prevAssertions = m_totals.assertions;
         double duration = 0;
         m_shouldReportUnexpected = true;
-        Detail::g_lastKnownLineInfo() = testCaseInfo.lineInfo;
+        Detail::g_lastKnownLineInfo = testCaseInfo.lineInfo;
 
         Timer timer;
         CATCH_TRY {
@@ -724,7 +718,7 @@ namespace Catch {
             ITransientExpression const *expr,
             bool negated ) {
 
-        Detail::g_lastKnownLineInfo() = info.lineInfo;
+        Detail::g_lastKnownLineInfo = info.lineInfo;
         AssertionResultData data( resultType, LazyExpression( negated ) );
 
         AssertionResult assertionResult{ info, CATCH_MOVE( data ) };
@@ -739,7 +733,7 @@ namespace Catch {
             std::string&& message,
             AssertionReaction& reaction
     ) {
-        Detail::g_lastKnownLineInfo() = info.lineInfo;
+        Detail::g_lastKnownLineInfo = info.lineInfo;
 
         AssertionResultData data( resultType, LazyExpression( false ) );
         data.message = CATCH_MOVE( message );
@@ -770,7 +764,7 @@ namespace Catch {
             std::string&& message,
             AssertionReaction& reaction
     ) {
-        Detail::g_lastKnownLineInfo() = info.lineInfo;
+        Detail::g_lastKnownLineInfo = info.lineInfo;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = CATCH_MOVE(message);
@@ -787,13 +781,13 @@ namespace Catch {
     }
 
     AssertionInfo RunContext::makeDummyAssertionInfo() {
-        auto const& lastLineInfo = Detail::g_lastKnownLineInfo();
         const bool testCaseJustStarted =
-            lastLineInfo == m_activeTestCase->getTestCaseInfo().lineInfo;
+            Detail::g_lastKnownLineInfo ==
+            m_activeTestCase->getTestCaseInfo().lineInfo;
 
         return AssertionInfo{
             testCaseJustStarted ? "TEST_CASE"_sr : StringRef(),
-            lastLineInfo,
+            Detail::g_lastKnownLineInfo,
             testCaseJustStarted ? StringRef() : "{Unknown expression after the reported line}"_sr,
             ResultDisposition::Normal
         };
@@ -803,7 +797,7 @@ namespace Catch {
             AssertionInfo const& info
     ) {
         using namespace std::string_literals;
-        Detail::g_lastKnownLineInfo() = info.lineInfo;
+        Detail::g_lastKnownLineInfo = info.lineInfo;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = "Exception translation was disabled by CATCH_CONFIG_FAST_COMPILE"s;
@@ -856,9 +850,9 @@ namespace Catch {
         // we have to get rid of them before adding new ones, or the
         // delayed clear in assertion handling will erase the valid ones
         // as well.
-        if ( Detail::g_clearMessageScopes() ) {
+        if ( Detail::g_clearMessageScopes ) {
             Detail::g_messageScopes().clear();
-            Detail::g_clearMessageScopes() = false;
+            Detail::g_clearMessageScopes = false;
         }
         Detail::g_messageScopes().emplace_back( CATCH_MOVE( builder ) );
     }
