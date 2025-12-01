@@ -12,6 +12,7 @@
 #include <catch2/internal/catch_result_type.hpp>
 #include <catch2/internal/catch_source_line_info.hpp>
 #include <catch2/internal/catch_stringref.hpp>
+#include <catch2/internal/catch_thread_local.hpp>
 
 #include <string>
 
@@ -38,7 +39,7 @@ namespace Catch {
             return sequence < other.sequence;
         }
     private:
-        static thread_local unsigned int globalCount;
+        static CATCH_INTERNAL_THREAD_LOCAL unsigned int globalCount;
     };
 
 } // end namespace Catch

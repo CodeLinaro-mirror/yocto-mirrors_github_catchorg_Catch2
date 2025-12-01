@@ -20,6 +20,7 @@
 #include <catch2/internal/catch_output_redirect.hpp>
 #include <catch2/internal/catch_assertion_handler.hpp>
 #include <catch2/internal/catch_test_failure_exception.hpp>
+#include <catch2/internal/catch_thread_local.hpp>
 #include <catch2/internal/catch_result_type.hpp>
 
 #include <cassert>
@@ -175,25 +176,25 @@ namespace Catch {
         // from heap, to avoid consuming too much thread-local storage.
 
         // This is used for the "if" part of CHECKED_IF/CHECKED_ELSE
-        static thread_local bool g_lastAssertionPassed = false;
+        static CATCH_INTERNAL_THREAD_LOCAL bool g_lastAssertionPassed = false;
 
         // This is the source location for last encountered macro. It is
         // used to provide the users with more precise location of error
         // when an unexpected exception/fatal error happens.
-        static thread_local SourceLineInfo g_lastKnownLineInfo("DummyLocation", static_cast<size_t>(-1));
+        static CATCH_INTERNAL_THREAD_LOCAL SourceLineInfo g_lastKnownLineInfo("DummyLocation", static_cast<size_t>(-1));
 
         // Should we clear message scopes before sending off the messages to
         // reporter? Set in `assertionPassedFastPath` to avoid doing the full
         // clear there for performance reasons.
-        static thread_local bool g_clearMessageScopes = false;
+        static CATCH_INTERNAL_THREAD_LOCAL bool g_clearMessageScopes = false;
 
         CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS
         // Actual messages to be provided to the reporter
-        static thread_local std::vector<MessageInfo> g_messages;
+        static CATCH_INTERNAL_THREAD_LOCAL std::vector<MessageInfo> g_messages;
 
         // Owners for the UNSCOPED_X information macro
-        static thread_local std::vector<ScopedMessage> g_messageScopes;
+        static CATCH_INTERNAL_THREAD_LOCAL std::vector<ScopedMessage> g_messageScopes;
         CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
 
     } // namespace Detail
