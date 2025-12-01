@@ -182,10 +182,7 @@ namespace Catch {
         // the desired semantics on GCC, but not on MSVC).
 
         // This is used for the "if" part of CHECKED_IF/CHECKED_ELSE
-        static bool& g_lastAssertionPassed() {
-            static CATCH_INTERNAL_THREAD_LOCAL bool value = false;
-            return value;
-        }
+        static CATCH_INTERNAL_THREAD_LOCAL bool g_lastAssertionPassed = false;
 
         // This is the source location for last encountered macro. It is
         // used to provide the users with more precise location of error
@@ -345,12 +342,12 @@ namespace Catch {
         Detail::g_lastKnownLineInfo() = result.m_info.lineInfo;
         if (result.getResultType() == ResultWas::Ok) {
             m_atomicAssertionCount.passed++;
-            Detail::g_lastAssertionPassed() = true;
+            Detail::g_lastAssertionPassed = true;
         } else if (result.getResultType() == ResultWas::ExplicitSkip) {
             m_atomicAssertionCount.skipped++;
-            Detail::g_lastAssertionPassed() = true;
+            Detail::g_lastAssertionPassed = true;
         } else if (!result.succeeded()) {
-            Detail::g_lastAssertionPassed() = false;
+            Detail::g_lastAssertionPassed = false;
             if (result.isOk()) {
             }
             else if( m_activeTestCase->getTestCaseInfo().okToFail() ) // Read from a shared state established before the threads could start, this is fine
@@ -359,7 +356,7 @@ namespace Catch {
                 m_atomicAssertionCount.failed++;
         }
         else {
-            Detail::g_lastAssertionPassed() = true;
+            Detail::g_lastAssertionPassed = true;
         }
 
         if ( Detail::g_clearMessageScopes() ) {
@@ -603,14 +600,14 @@ namespace Catch {
     }
 
     bool RunContext::lastAssertionPassed() {
-        return Detail::g_lastAssertionPassed();
+        return Detail::g_lastAssertionPassed;
     }
 
     void RunContext::assertionPassedFastPath(SourceLineInfo lineInfo) {
         // We want to save the line info for better experience with unexpected assertions
         Detail::g_lastKnownLineInfo() = lineInfo;
         ++m_atomicAssertionCount.passed;
-        Detail::g_lastAssertionPassed() = true;
+        Detail::g_lastAssertionPassed = true;
         Detail::g_clearMessageScopes() = true;
     }
 
