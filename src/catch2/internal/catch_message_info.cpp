@@ -7,8 +7,19 @@
 // SPDX-License-Identifier: BSL-1.0
 
 #include <catch2/internal/catch_message_info.hpp>
+#include <catch2/internal/catch_thread_local.hpp>
 
 namespace Catch {
+
+    namespace {
+        // Messages are owned by their individual threads, so the counter should
+        // be thread-local as well. Alternative consideration: atomic counter,
+        // so threads don't share IDs and things are easier to debug.
+        static unsigned int GetNextMessageID() {
+            static CATCH_INTERNAL_THREAD_LOCAL unsigned int counter = 0;
+            return ++counter;
+        }
+    }
 
     MessageInfo::MessageInfo( StringRef _macroName,
                               SourceLineInfo const& _lineInfo,
@@ -16,11 +27,7 @@ namespace Catch {
     :   macroName( _macroName ),
         lineInfo( _lineInfo ),
         type( _type ),
-        sequence( ++globalCount )
+        sequence( GetNextMessageID() )
     {}
-
-    // Messages are owned by their individual threads, so the counter should be thread-local as well.
-    // Alternative consideration: atomic, so threads don't share IDs and things are easier to debug.
-    CATCH_INTERNAL_THREAD_LOCAL unsigned int MessageInfo::globalCount = 0;
 
 } // end namespace Catch

@@ -12,7 +12,6 @@
 #include <catch2/internal/catch_result_type.hpp>
 #include <catch2/internal/catch_source_line_info.hpp>
 #include <catch2/internal/catch_stringref.hpp>
-#include <catch2/internal/catch_thread_local.hpp>
 
 #include <string>
 
@@ -38,8 +37,6 @@ namespace Catch {
         bool operator < (MessageInfo const& other) const {
             return sequence < other.sequence;
         }
-    private:
-        static CATCH_INTERNAL_THREAD_LOCAL unsigned int globalCount;
     };
 
 } // end namespace Catch

@@ -174,27 +174,49 @@ namespace Catch {
         // should also be thread local. For now we just use naked globals
         // below, in the future we will want to allocate piece of memory
         // from heap, to avoid consuming too much thread-local storage.
+        //
+        // Note that we also don't want the thread-local variables below
+        // be initialized for every thread, only for those that touch Catch2.
+        // To make this work with both GCC/Clang and MSVC, we have to make
+        // them thread-local magic statics. (Class-level statics have
+        // the desired semantics on GCC, but not on MSVC).
 
         // This is used for the "if" part of CHECKED_IF/CHECKED_ELSE
-        static CATCH_INTERNAL_THREAD_LOCAL bool g_lastAssertionPassed = false;
+        static bool& g_lastAssertionPassed() {
+            static CATCH_INTERNAL_THREAD_LOCAL bool value = false;
+            return value;
+        }
 
         // This is the source location for last encountered macro. It is
         // used to provide the users with more precise location of error
         // when an unexpected exception/fatal error happens.
-        static CATCH_INTERNAL_THREAD_LOCAL SourceLineInfo g_lastKnownLineInfo("DummyLocation", static_cast<size_t>(-1));
+        static SourceLineInfo& g_lastKnownLineInfo() {
+            static CATCH_INTERNAL_THREAD_LOCAL SourceLineInfo value(
+                "DummyLocation", static_cast<size_t>( -1 ) );
+            return value;
+        }
 
         // Should we clear message scopes before sending off the messages to
         // reporter? Set in `assertionPassedFastPath` to avoid doing the full
         // clear there for performance reasons.
-        static CATCH_INTERNAL_THREAD_LOCAL bool g_clearMessageScopes = false;
+        static bool& g_clearMessageScopes() {
+            static CATCH_INTERNAL_THREAD_LOCAL bool value = false;
+            return value;
+        }
 
         CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
         CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS
         // Actual messages to be provided to the reporter
-        static CATCH_INTERNAL_THREAD_LOCAL std::vector<MessageInfo> g_messages;
+        static std::vector<MessageInfo>& g_messages() {
+            static CATCH_INTERNAL_THREAD_LOCAL std::vector<MessageInfo> value;
+            return value;
+        }
 
         // Owners for the UNSCOPED_X information macro
-        static CATCH_INTERNAL_THREAD_LOCAL std::vector<ScopedMessage> g_messageScopes;
+        static std::vector<ScopedMessage>& g_messageScopes() {
+            static CATCH_INTERNAL_THREAD_LOCAL std::vector<ScopedMessage> value;
+            return value;
+        }
         CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
 
     } // namespace Detail
@@ -320,15 +342,15 @@ namespace Catch {
 
 
     void RunContext::assertionEnded(AssertionResult&& result) {
-        Detail::g_lastKnownLineInfo = result.m_info.lineInfo;
+        Detail::g_lastKnownLineInfo() = result.m_info.lineInfo;
         if (result.getResultType() == ResultWas::Ok) {
             m_atomicAssertionCount.passed++;
-            Detail::g_lastAssertionPassed = true;
+            Detail::g_lastAssertionPassed() = true;
         } else if (result.getResultType() == ResultWas::ExplicitSkip) {
             m_atomicAssertionCount.skipped++;
-            Detail::g_lastAssertionPassed = true;
+            Detail::g_lastAssertionPassed() = true;
         } else if (!result.succeeded()) {
-            Detail::g_lastAssertionPassed = false;
+            Detail::g_lastAssertionPassed() = false;
             if (result.isOk()) {
             }
             else if( m_activeTestCase->getTestCaseInfo().okToFail() ) // Read from a shared state established before the threads could start, this is fine
@@ -337,12 +359,12 @@ namespace Catch {
                 m_atomicAssertionCount.failed++;
         }
         else {
-            Detail::g_lastAssertionPassed = true;
+            Detail::g_lastAssertionPassed() = true;
         }
 
-        if ( Detail::g_clearMessageScopes ) {
-            Detail::g_messageScopes.clear();
-            Detail::g_clearMessageScopes = false;
+        if ( Detail::g_clearMessageScopes() ) {
+            Detail::g_messageScopes().clear();
+            Detail::g_clearMessageScopes() = false;
         }
 
         // From here, we are touching shared state and need mutex.
@@ -350,11 +372,11 @@ namespace Catch {
         {
             auto _ = scopedDeactivate( *m_outputRedirect );
             updateTotalsFromAtomics();
-            m_reporter->assertionEnded( AssertionStats( result, Detail::g_messages, m_totals ) );
+            m_reporter->assertionEnded( AssertionStats( result, Detail::g_messages(), m_totals ) );
         }
 
         if ( result.getResultType() != ResultWas::Warning ) {
-            Detail::g_messageScopes.clear();
+            Detail::g_messageScopes().clear();
         }
 
         // Reset working state. assertion info will be reset after
@@ -383,7 +405,7 @@ namespace Catch {
         m_activeSections.push_back(&sectionTracker);
 
         SectionInfo sectionInfo( sectionLineInfo, static_cast<std::string>(sectionName) );
-        Detail::g_lastKnownLineInfo = sectionLineInfo;
+        Detail::g_lastKnownLineInfo() = sectionLineInfo;
 
         {
             auto _ = scopedDeactivate( *m_outputRedirect );
@@ -402,7 +424,7 @@ namespace Catch {
             m_trackerContext,
             TestCaseTracking::NameAndLocationRef(
                  generatorName, lineInfo ) );
-        Detail::g_lastKnownLineInfo = lineInfo;
+        Detail::g_lastKnownLineInfo() = lineInfo;
         return tracker;
     }
 
@@ -581,15 +603,15 @@ namespace Catch {
     }
 
     bool RunContext::lastAssertionPassed() {
-        return Detail::g_lastAssertionPassed;
+        return Detail::g_lastAssertionPassed();
     }
 
     void RunContext::assertionPassedFastPath(SourceLineInfo lineInfo) {
         // We want to save the line info for better experience with unexpected assertions
-        Detail::g_lastKnownLineInfo = lineInfo;
+        Detail::g_lastKnownLineInfo() = lineInfo;
         ++m_atomicAssertionCount.passed;
-        Detail::g_lastAssertionPassed = true;
-        Detail::g_clearMessageScopes = true;
+        Detail::g_lastAssertionPassed() = true;
+        Detail::g_clearMessageScopes() = true;
     }
 
     void RunContext::updateTotalsFromAtomics() {
@@ -613,7 +635,7 @@ namespace Catch {
         Counts prevAssertions = m_totals.assertions;
         double duration = 0;
         m_shouldReportUnexpected = true;
-        Detail::g_lastKnownLineInfo = testCaseInfo.lineInfo;
+        Detail::g_lastKnownLineInfo() = testCaseInfo.lineInfo;
 
         Timer timer;
         CATCH_TRY {
@@ -643,10 +665,10 @@ namespace Catch {
 
         m_testCaseTracker->close();
         handleUnfinishedSections();
-        Detail::g_messageScopes.clear();
+        Detail::g_messageScopes().clear();
         // TBD: At this point, m_messages should be empty. Do we want to
         //      assert that this is true, or keep the defensive clear call?
-        Detail::g_messages.clear();
+        Detail::g_messages().clear();
 
         SectionStats testCaseSectionStats(CATCH_MOVE(testCaseSection), assertions, duration, missingAssertions);
         m_reporter->sectionEnded(testCaseSectionStats);
@@ -705,7 +727,7 @@ namespace Catch {
             ITransientExpression const *expr,
             bool negated ) {
 
-        Detail::g_lastKnownLineInfo = info.lineInfo;
+        Detail::g_lastKnownLineInfo() = info.lineInfo;
         AssertionResultData data( resultType, LazyExpression( negated ) );
 
         AssertionResult assertionResult{ info, CATCH_MOVE( data ) };
@@ -720,7 +742,7 @@ namespace Catch {
             std::string&& message,
             AssertionReaction& reaction
     ) {
-        Detail::g_lastKnownLineInfo = info.lineInfo;
+        Detail::g_lastKnownLineInfo() = info.lineInfo;
 
         AssertionResultData data( resultType, LazyExpression( false ) );
         data.message = CATCH_MOVE( message );
@@ -751,7 +773,7 @@ namespace Catch {
             std::string&& message,
             AssertionReaction& reaction
     ) {
-        Detail::g_lastKnownLineInfo = info.lineInfo;
+        Detail::g_lastKnownLineInfo() = info.lineInfo;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = CATCH_MOVE(message);
@@ -768,13 +790,13 @@ namespace Catch {
     }
 
     AssertionInfo RunContext::makeDummyAssertionInfo() {
+        auto const& lastLineInfo = Detail::g_lastKnownLineInfo();
         const bool testCaseJustStarted =
-            Detail::g_lastKnownLineInfo ==
-            m_activeTestCase->getTestCaseInfo().lineInfo;
+            lastLineInfo == m_activeTestCase->getTestCaseInfo().lineInfo;
 
         return AssertionInfo{
             testCaseJustStarted ? "TEST_CASE"_sr : StringRef(),
-            Detail::g_lastKnownLineInfo,
+            lastLineInfo,
             testCaseJustStarted ? StringRef() : "{Unknown expression after the reported line}"_sr,
             ResultDisposition::Normal
         };
@@ -784,7 +806,7 @@ namespace Catch {
             AssertionInfo const& info
     ) {
         using namespace std::string_literals;
-        Detail::g_lastKnownLineInfo = info.lineInfo;
+        Detail::g_lastKnownLineInfo() = info.lineInfo;
 
         AssertionResultData data( ResultWas::ThrewException, LazyExpression( false ) );
         data.message = "Exception translation was disabled by CATCH_CONFIG_FAST_COMPILE"s;
@@ -814,7 +836,7 @@ namespace Catch {
     }
 
     void IResultCapture::pushScopedMessage( MessageInfo&& message ) {
-        Detail::g_messages.push_back( CATCH_MOVE( message ) );
+        Detail::g_messages().push_back( CATCH_MOVE( message ) );
     }
 
     void IResultCapture::popScopedMessage( unsigned int messageId ) {
@@ -823,12 +845,13 @@ namespace Catch {
         //       messages than low single digits, so the optimization is tiny,
         //       and we would have to hand-write the loop to avoid terrible
         //       codegen of reverse iterators in debug mode.
-        Detail::g_messages.erase( std::find_if( Detail::g_messages.begin(),
-                                                Detail::g_messages.end(),
-                                                [=]( MessageInfo const& msg ) {
-                                                    return msg.sequence ==
-                                                           messageId;
-                                                } ) );
+        auto& messages = Detail::g_messages();
+        messages.erase( std::find_if( messages.begin(),
+                                      messages.end(),
+                                      [=]( MessageInfo const& msg ) {
+                                          return msg.sequence ==
+                                                 messageId;
+                                      } ) );
     }
 
     void IResultCapture::emplaceUnscopedMessage( MessageBuilder&& builder ) {
@@ -836,11 +859,11 @@ namespace Catch {
         // we have to get rid of them before adding new ones, or the
         // delayed clear in assertion handling will erase the valid ones
         // as well.
-        if ( Detail::g_clearMessageScopes ) {
-            Detail::g_messageScopes.clear();
-            Detail::g_clearMessageScopes = false;
+        if ( Detail::g_clearMessageScopes() ) {
+            Detail::g_messageScopes().clear();
+            Detail::g_clearMessageScopes() = false;
         }
-        Detail::g_messageScopes.emplace_back( CATCH_MOVE( builder ) );
+        Detail::g_messageScopes().emplace_back( CATCH_MOVE( builder ) );
     }
 
     void seedRng(IConfig const& config) {
