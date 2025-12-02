@@ -15,10 +15,7 @@ namespace Catch {
         // Messages are owned by their individual threads, so the counter should
         // be thread-local as well. Alternative consideration: atomic counter,
         // so threads don't share IDs and things are easier to debug.
-        static unsigned int GetNextMessageID() {
-            static CATCH_INTERNAL_THREAD_LOCAL unsigned int counter = 0;
-            return ++counter;
-        }
+        static CATCH_INTERNAL_THREAD_LOCAL unsigned int messageIDCounter = 0;
     }
 
     MessageInfo::MessageInfo( StringRef _macroName,
@@ -27,7 +24,7 @@ namespace Catch {
     :   macroName( _macroName ),
         lineInfo( _lineInfo ),
         type( _type ),
-        sequence( GetNextMessageID() )
+        sequence( ++messageIDCounter )
     {}
 
 } // end namespace Catch
