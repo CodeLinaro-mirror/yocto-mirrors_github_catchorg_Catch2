@@ -35,6 +35,13 @@
 #  define CATCH_CPP20_OR_GREATER
 #endif
 
+// Matchers are only constexpr-able in C++20
+#if defined( CATCH_CPP20_OR_GREATER )
+#    define CATCH_CPP20_CONSTEXPR constexpr
+#else
+#    define CATCH_CPP20_CONSTEXPR
+#endif
+
 // Only GCC compiler should be used in this block, so other compilers trying to
 // mask themselves as GCC should be ignored.
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && !defined(__CUDACC__) && !defined(__LCC__) && !defined(__NVCOMPILER)

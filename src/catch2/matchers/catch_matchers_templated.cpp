@@ -9,7 +9,6 @@
 
 namespace Catch {
 namespace Matchers {
-    MatcherGenericBase::~MatcherGenericBase() = default;
 
     namespace Detail {
 
