@@ -21,7 +21,7 @@ namespace {
 
         std::string describe() const override {
             using namespace std::string_literals;
-            return "MatchesAnything"s;
+            return "Matches anything"s;
         }
     };
 

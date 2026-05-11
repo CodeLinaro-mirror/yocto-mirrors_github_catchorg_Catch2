@@ -10,6 +10,11 @@
 namespace Catch {
 namespace Matchers {
 
+    std::string MatcherGenericBase::describe() const {
+        using namespace std::string_literals;
+        return "Undescribed generic matcher"s;
+    }
+
     namespace Detail {
 
         std::string describe_multi_matcher(StringRef combine, std::string const* descriptions_begin, std::string const* descriptions_end) {

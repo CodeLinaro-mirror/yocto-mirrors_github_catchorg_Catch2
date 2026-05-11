@@ -22,6 +22,7 @@
 namespace Catch {
 namespace Matchers {
     class MatcherGenericBase : public MatcherUntypedBase {
+        std::string describe() const override;
     public:
         constexpr MatcherGenericBase() = default;
 
