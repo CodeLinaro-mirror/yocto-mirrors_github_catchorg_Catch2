@@ -299,7 +299,9 @@ function(catch_discover_tests_impl)
   file(WRITE "${_CTEST_FILE}" "${script}")
 endfunction()
 
-if(CMAKE_SCRIPT_MODE_FILE)
+# To enable `include`ing this file in the unit test scripts, we only run
+# the impl if an actual `TEST_EXECUTABLE` is provided.
+if(CMAKE_SCRIPT_MODE_FILE AND DEFINED TEST_EXECUTABLE)
   catch_discover_tests_impl(
     TEST_EXECUTABLE ${TEST_EXECUTABLE}
     TEST_EXECUTOR ${TEST_EXECUTOR}
