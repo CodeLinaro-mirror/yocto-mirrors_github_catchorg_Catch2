@@ -10,12 +10,16 @@
 #include <catch2/catch_test_spec.hpp>
 #include <catch2/catch_version.hpp>
 #include <catch2/interfaces/catch_interfaces_config.hpp>
+#include <catch2/internal/catch_case_insensitive_comparisons.hpp>
+#include <catch2/internal/catch_enforce.hpp>
 #include <catch2/internal/catch_list.hpp>
 #include <catch2/internal/catch_string_manip.hpp>
 #include <catch2/reporters/catch_reporter_json.hpp>
 
 namespace Catch {
     namespace {
+        const size_t kJsonOutputVersion = 2;
+
         void writeSourceInfo( JsonObjectWriter& writer,
                               SourceLineInfo const& sourceInfo ) {
             auto source_location_writer =
@@ -54,11 +58,23 @@ namespace Catch {
         // We only handle assertions when they end
         m_preferences.shouldReportAllAssertionStarts = false;
 
+        Detail::CaseInsensitiveEqualTo equals;
+        auto it = m_customOptions.find( "Xlist-tags" );
+        if ( it != m_customOptions.end() ) {
+            if ( equals(it->second, "ON") ) {
+                m_listTags = true;
+            } else if ( equals(it->second, "OFF") ) {
+                m_listTags = false;
+            } else {
+                CATCH_RUNTIME_ERROR( "Unknown value for Xlist-tags: " << it->second );
+            }
+        }
+
         m_objectWriters.emplace( m_stream );
         m_writers.emplace( Writer::Object );
         auto& writer = m_objectWriters.top();
 
-        writer.write( "version"_sr ).write( 1 );
+        writer.write( "version"_sr ).write( kJsonOutputVersion );
 
         {
             auto metadata_writer = writer.write( "metadata"_sr ).writeObject();
@@ -345,7 +361,7 @@ namespace Catch {
 
             desc_writer.write( "name"_sr ).write( info.name );
             desc_writer.write( "class-name"_sr ).write( info.className );
-            {
+            if ( m_listTags ) {
                 auto tag_writer = desc_writer.write( "tags"_sr ).writeArray();
                 for ( auto const& tag : info.tags ) {
                     tag_writer.write( tag.original );

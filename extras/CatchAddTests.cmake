@@ -253,10 +253,15 @@ function(catch_discover_tests_impl)
 
   make_temp_file_path(listing_output_path "${_TEST_WORKING_DIR}")
 
+  set(_ListTags "OFF")
+  if (add_tags)
+    set(_ListTags "ON")
+  endif()
+
   execute_process(
     COMMAND ${_TEST_EXECUTOR} "${_TEST_EXECUTABLE}" ${spec}
       --list-tests
-      --reporter json
+      --reporter "json::Xlist-tags=${_ListTags}"
       --out "${listing_output_path}"
       --order lex # Make sure the output order, and thus test registration order, is consistent across runs.
     OUTPUT_VARIABLE listing_output
@@ -326,7 +331,7 @@ function(catch_discover_tests_impl)
 
   # Parse JSON output for list of tests/class names/tags
   string(JSON version GET "${listing_output}" "version")
-  if(NOT version STREQUAL "1")
+  if(NOT version STREQUAL "2")
     message(FATAL_ERROR "Unsupported catch output version: '${version}'")
   endif()
 

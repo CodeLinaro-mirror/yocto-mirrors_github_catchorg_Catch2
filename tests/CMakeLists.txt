@@ -199,6 +199,27 @@ set_tests_properties(List::Tests::XmlOutput PROPERTIES
   PASS_REGULAR_EXPRESSION "<Line>[0-9]+</Line>"
   FAIL_REGULAR_EXPRESSION "[0-9]+ test cases"
 )
+add_test(NAME List::Tests::JsonOutput COMMAND $<TARGET_FILE:SelfTest> --list-tests -r json)
+set_tests_properties(List::Tests::JsonOutput PROPERTIES
+  PASS_REGULAR_EXPRESSION "\"line\": [0-9]+"
+  FAIL_REGULAR_EXPRESSION "[0-9]+ test cases"
+)
+# The weird capitalization ensures that the check in reporter is case insensitive
+add_test(NAME List::Tests::JsonOutput::TagsOff COMMAND $<TARGET_FILE:SelfTest> --list-tests -r json::Xlist-tags=oFf)
+set_tests_properties(List::Tests::JsonOutput::TagsOff PROPERTIES
+  FAIL_REGULAR_EXPRESSION "\"tags\": \\["
+)
+add_test(NAME List::Tests::JsonOutput::TagsOn COMMAND $<TARGET_FILE:SelfTest> --list-tests -r json::Xlist-tags=oN)
+set_tests_properties(List::Tests::JsonOutput::TagsOn PROPERTIES
+  PASS_REGULAR_EXPRESSION "\"tags\": \\["
+)
+add_test(NAME List::Tests::JsonOutput::BadTagOptionIsRejected
+  COMMAND $<TARGET_FILE:SelfTest> --list-tests -r json::Xlist-tags=maybe
+)
+set_tests_properties(List::Tests::JsonOutput::BadTagOptionIsRejected
+  PROPERTIES
+    PASS_REGULAR_EXPRESSION "Unknown value for Xlist-tags: maybe"
+)
 
 add_test(NAME List::Tags::Output COMMAND $<TARGET_FILE:SelfTest> --list-tags)
 set_tests_properties(List::Tags::Output PROPERTIES
@@ -210,6 +231,11 @@ set_tests_properties(List::Tags::XmlOutput PROPERTIES
   PASS_REGULAR_EXPRESSION "<Count>18</Count>"
   FAIL_REGULAR_EXPRESSION "[0-9]+ tags"
 )
+add_test(NAME List::Tags::JsonOutput COMMAND $<TARGET_FILE:SelfTest> --list-tags -r json)
+set_tests_properties(List::Tags::JsonOutput PROPERTIES
+  PASS_REGULAR_EXPRESSION "\"count\": 18"
+  FAIL_REGULAR_EXPRESSION "[0-9]+ tags"
+)
 
 add_test(NAME List::Reporters::Output COMMAND $<TARGET_FILE:SelfTest> --list-reporters)
 set_tests_properties(List::Reporters::Output PROPERTIES PASS_REGULAR_EXPRESSION "Available reporters:")
@@ -219,6 +245,12 @@ set_tests_properties(List::Reporters::XmlOutput PROPERTIES
   PASS_REGULAR_EXPRESSION "<Name>compact</Name>"
   FAIL_REGULAR_EXPRESSION "Available reporters:"
 )
+add_test(NAME List::Reporters::JsonOutput COMMAND $<TARGET_FILE:SelfTest> --list-reporters -r json)
+set_tests_properties(List::Reporters::JsonOutput PROPERTIES
+  PASS_REGULAR_EXPRESSION "\"name\": \"compact\""
+  FAIL_REGULAR_EXPRESSION "Available reporters:"
+)
+
 
 add_test(NAME List::Listeners::Output
   COMMAND
@@ -243,6 +275,18 @@ set_tests_properties(List::Listeners::XmlOutput
     PASS_REGULAR_EXPRESSION "<RegisteredListeners>"
     FAIL_REGULAR_EXPRESSION "Registered listeners:"
 )
+add_test(NAME List::Listeners::JsonOutput
+  COMMAND
+    $<TARGET_FILE:SelfTest>
+      --list-listeners
+      --reporter json
+)
+set_tests_properties(List::Listeners::JsonOutput
+  PROPERTIES
+    PASS_REGULAR_EXPRESSION "\"listeners\": \\["
+    FAIL_REGULAR_EXPRESSION "Registered listeners:"
+)
+
 
 add_test(NAME NoAssertions COMMAND $<TARGET_FILE:SelfTest> -w NoAssertions "An empty test with no assertions")
 set_tests_properties(NoAssertions PROPERTIES PASS_REGULAR_EXPRESSION "No assertions in test case")
