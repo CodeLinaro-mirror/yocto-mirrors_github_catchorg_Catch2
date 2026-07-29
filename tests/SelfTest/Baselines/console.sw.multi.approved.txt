@@ -11319,7 +11319,6 @@ with expansion:
       "tests": [
         {
           "name": "fake test name",
-          "class-name": "",
           "tags": [
             "fakeTestTag"
           ],

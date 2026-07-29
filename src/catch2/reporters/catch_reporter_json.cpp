@@ -360,7 +360,9 @@ namespace Catch {
             auto const& info = test.getTestCaseInfo();
 
             desc_writer.write( "name"_sr ).write( info.name );
-            desc_writer.write( "class-name"_sr ).write( info.className );
+            if (!info.className.empty()) {
+                desc_writer.write( "class-name"_sr ).write( info.className );
+            }
             if ( m_listTags ) {
                 auto tag_writer = desc_writer.write( "tags"_sr ).writeArray();
                 for ( auto const& tag : info.tags ) {

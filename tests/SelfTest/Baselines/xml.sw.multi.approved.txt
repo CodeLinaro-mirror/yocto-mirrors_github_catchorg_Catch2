@@ -13501,7 +13501,6 @@ Approx( 0.98999999999999999 )
     "tests": [
       {
         "name": "fake test name",
-        "class-name": "",
         "tags": [
           "fakeTestTag"
         ],
