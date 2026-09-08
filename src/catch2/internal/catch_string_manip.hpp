@@ -29,7 +29,7 @@ namespace Catch {
     constexpr char toLower( char c ) {
         const uint32_t as_number = static_cast<unsigned char>( c );
         const bool isUpper = ( as_number - static_cast<uint32_t>( 'A' ) ) < 26u;
-        return static_cast<char>( as_number + ( isUpper ? 32u : 0u ) );
+        return static_cast<char>( as_number | ( isUpper << 5 ) );
     }
     //! Returns a new string without whitespace at the start/end
     std::string trim( std::string const& str );
