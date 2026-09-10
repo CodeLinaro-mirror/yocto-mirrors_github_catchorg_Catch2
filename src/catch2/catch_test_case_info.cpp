@@ -213,7 +213,7 @@ namespace Catch {
             break;
         case 2:
             if ( tags[0] == tags[1] ) { tags.pop_back(); }
-            if ( tags[1] < tags[0] ) { std::swap( tags[0], tags[1] ); }
+            else if ( tags[1] < tags[0] ) { std::swap( tags[0], tags[1] ); }
             break;
         default:
             std::sort( begin( tags ), end( tags ) );
